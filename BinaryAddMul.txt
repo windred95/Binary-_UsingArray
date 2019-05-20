@@ -1,0 +1,167 @@
+#include <iostream>
+#include <algorithm>	// filled with good stuff
+#include <cmath>		
+#include <vector>
+#include <iomanip>		// align digits of nicer output in general
+#include <new>			// memory allocation for C++
+using namespace std;
+const int MAXDIGITS = 10;     // log(num max)/log(2), base 2 is max digits needed.
+typedef int DIGITS;           // better style to use meanful names when possible.
+const int BASE16 = 16;
+const int BASE8 = 8;
+const int BASE5 = 5;
+const int BASE3 = 3;
+const int BASE2 = 2;
+const char *HEX = "0123456789ABCDEF";     // HEXADECIMAL Symbols
+const char *Three = "-+T";               // base 3 system
+const char *Octal = "01234567";            // base 8
+const char *Five = "01234";                // Base 5
+const char *Binary = "01";
+
+DIGITS * conversion(int n, int b);
+void display(const DIGITS *e, const char sym[]);
+DIGITS *add(int a, int b);
+DIGITS MOD(int a, int d);
+DIGITS DIV(int a, int d);
+DIGITS *mul(int a, int b);
+DIGITS *mul2(int *a, int b, int c);
+DIGITS *addB(int a, int b);
+int main() {
+
+	int num = 27;  // number to convert
+
+	DIGITS * expansion = conversion(num, BASE16);
+	//display(expansion, HEX);
+	delete expansion;                 // return to system
+
+	expansion = conversion(num, BASE3);
+	//display(expansion, Three);
+	delete expansion;                 // return to system
+
+	expansion = conversion(num, BASE2);
+	//display(expansion, Binary);
+	delete expansion;                // return to system
+
+	int *sum = add(2,2);
+	//display(sum, Binary);
+    delete sum;
+
+	MOD(-15,2);
+	DIV(-15,2);
+
+	mul(15,20);
+	return  0;
+}
+DIGITS * conversion(int n, int b)
+{
+	int * temp = new  int[MAXDIGITS];                    // create space
+	std::fill(temp, temp + MAXDIGITS, 0);                // C++ way, STLs !!.
+	int r, q(n);                // quotient and reminder.
+	int k(0);                   // digit count, LSD.
+	while (q != 0)
+	{
+		r = MOD(q,b);
+		q = DIV(q,b);
+		temp[k]=r;
+		k = k + 1;
+	}
+	return temp;
+}
+void display(const DIGITS *e, const char sym[]) {
+	const int N = MAXDIGITS;
+	for (int i = N - 1; i >= 0; i--)
+		cout << sym[e[i]];      // get correct symbol
+	cout << endl;
+}
+DIGITS *add(int a, int b)
+{
+    int *Ba, *Bb; //Ba = binary of a , Bb = binary of b
+    int *sum = new int[MAXDIGITS]; //create a new pointer array
+    Ba = conversion(a,BASE2); // convert into binary
+    Bb = conversion(b,BASE2);
+    int i(0),c(0);
+    while(i<MAXDIGITS)
+    {
+        int d = (Ba[i]+Bb[i]+c)/2;
+        sum[i]=Ba[i]+Bb[i]+c-(2*d);
+        c=d;
+        i++;
+    }
+    if(c!=0)
+        sum[i++] = c;
+    return sum;
+}
+DIGITS *addB(int *a, int *b)
+{
+    int *sum = new int[MAXDIGITS]; //create a new pointer array
+    int i(0),c(0);
+    while(i<MAXDIGITS)
+    {
+        int d = (a[i]+b[i]+c)/2;
+        sum[i]=a[i]+b[i]+c-(2*d);
+        c=d;
+        i++;
+    }
+    if(c!=0)
+        sum[i++] = c;
+    return sum;
+}
+DIGITS *mul(int a, int b)
+{
+    int *b1,*b2;
+    int *mulAns = new int[MAXDIGITS] {0};
+    int *mul3 = new int[MAXDIGITS];
+    b1 = conversion(a,BASE2); //convert...
+    b2 = conversion(b,BASE2);
+    int c=0;
+    for(int j=0;j<MAXDIGITS;j++)
+    {
+        mul3 = mul2(b1,b2[j],c); // call another function to perform multiplication line by line
+        c++;
+        mulAns = addB(mulAns,mul3); // another addition function, but for binary
+        //display(mul3,Binary);
+    }
+    display(mulAns,Binary);
+    return mulAns;
+}
+DIGITS *mul2(int *a, int b,int c)
+{
+    int *sum = new int[MAXDIGITS]{0};
+    int counter=c; // here I use two counter to indicate the correct position for original array (a)
+    int j = 0;     // and new array (sum), counter = c actually is doing the shifting
+    if(b==0) // skip some multiplication steps if b is 0,
+        return sum;
+    while(counter<MAXDIGITS)
+    {
+        sum[counter] = a[j]*b;
+        counter++;
+        j++;
+    }
+    for(int i=0;i<c;i++) // the rest of the position, stuffed with zero
+        sum[i]=0;
+    return sum;
+}
+DIGITS MOD(int a, int d) // return remainder of a mod d
+{
+    int r = abs(a);
+    while(r>=d)
+        r -=d; //subtract d as many time as necessary until r less than d
+    if(a<0 && r>0)
+        r = d-r;
+    return r;
+}
+DIGITS DIV(int a, int d) // return quotient of d
+{
+    if(a==0 || d==0)
+        return 0;
+    int q = 0;
+    int r = abs(a);
+    while(r>=d)
+    {
+        r -=d;
+        q +=1;
+    }
+    if(a<0 && r>0)
+        q = -(q+1);
+    return q;
+}
